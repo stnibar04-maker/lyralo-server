@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Lyralo</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="theme-color" content="#7B1E3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --burgundy:#7B1E3E;--burgundy-dark:#5C1530;--gold:#D4A574;--gold-light:#E8C9A0;
+    --cream:#FBF7F2;--cream-dark:#F2EBE0;--ink:#1A1A1A;--ink-soft:#3D3D3D;
+    --muted:#6B6B6B;--line:#E8DFD3;--white:#fff;
+    --green:#10B981;--blue:#3B82F6;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.04);
+    --shadow:0 4px 16px rgba(123,30,62,.08);
+    --t:.2s cubic-bezier(.2,.8,.2,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;line-height:1.2}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer}
+  input,textarea,select{font-family:inherit;font-size:14px}
+
+  /* ===== Layout ===== */
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  @media(max-width:880px){.app{grid-template-columns:1fr}}
+
+  /* ===== Sidebar ===== */
+  aside{background:#fff;border-right:1px solid var(--line);padding:24px 18px;display:flex;flex-direction:column}
+  @media(max-width:880px){aside{border-right:none;border-bottom:1px solid var(--line);padding:16px}}
+  .logo{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:600;letter-spacing:-.015em;color:var(--burgundy);display:flex;align-items:center;gap:9px;margin-bottom:32px;line-height:1}
+  .logo-mark{width:28px;height:28px;flex:none;color:inherit;overflow:visible}
+  .logo-mark .bar-side{fill:currentColor}
+  .logo-mark .bar-mid{fill:var(--gold)}
+  nav.menu{display:flex;flex-direction:column;gap:4px;flex:1}
+  nav.menu a{padding:10px 14px;border-radius:10px;font-weight:500;color:var(--ink-soft);display:flex;align-items:center;gap:10px;transition:all var(--t)}
+  nav.menu a:hover{background:var(--cream)}
+  nav.menu a.active{background:rgba(123,30,62,.08);color:var(--burgundy);font-weight:600}
+  nav.menu a .badge{margin-left:auto;background:var(--burgundy);color:#fff;font-size:.7rem;padding:2px 7px;border-radius:50px;font-weight:700}
+  .me{padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--muted)}
+  .me strong{display:block;color:var(--ink);font-size:.88rem;margin-bottom:2px}
+  .me button{margin-top:10px;background:transparent;border:1px solid var(--line);color:var(--ink-soft);padding:7px 12px;border-radius:8px;font-size:.78rem;width:100%}
+  .me button:hover{background:var(--cream-dark)}
+
+  /* ===== Main ===== */
+  main{padding:28px 32px;overflow-x:auto}
+  @media(max-width:600px){main{padding:18px}}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:14px;flex-wrap:wrap}
+  .topbar h1{font-size:1.7rem;color:var(--ink)}
+  .topbar .actions{display:flex;gap:8px}
+  .btn{padding:9px 16px;border-radius:50px;border:none;font-weight:600;font-size:.82rem;display:inline-flex;align-items:center;gap:6px;transition:all var(--t)}
+  .btn-primary{background:var(--burgundy);color:#fff}
+  .btn-primary:hover{background:var(--burgundy-dark)}
+  .btn-ghost{background:#fff;color:var(--ink-soft);border:1px solid var(--line)}
+  .btn-ghost:hover{background:var(--cream-dark)}
+  .btn-success{background:var(--green);color:#fff}
+  .btn-success:hover{filter:brightness(.93)}
+  .btn-danger{background:#fff;color:var(--red);border:1px solid #FECACA}
+  .btn-danger:hover{background:#FEF2F2}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .stat .label{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;margin-bottom:6px}
+  .stat .value{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--ink)}
+  .stat .accent{color:var(--burgundy)}
+  .stat .gold{color:var(--gold)}
+
+  /* Filters */
+  .filters{display:flex;gap:8px;align-items:center;background:#fff;padding:10px;border:1px solid var(--line);border-radius:14px;margin-bottom:14px;flex-wrap:wrap}
+  .filters input,.filters select{padding:9px 14px;border:1px solid var(--line);border-radius:10px;background:var(--cream);min-width:0}
+  .filters input{flex:1;min-width:200px}
+  .filter-chip{padding:7px 14px;border-radius:50px;font-size:.78rem;font-weight:600;background:var(--cream);color:var(--ink-soft);border:1px solid transparent;cursor:pointer;transition:all var(--t)}
+  .filter-chip.active{background:var(--burgundy);color:#fff}
+
+  /* Table */
+  .table-wrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--line);font-size:.88rem}
+  th{background:var(--cream);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  tbody tr{cursor:pointer;transition:background var(--t)}
+  tbody tr:hover{background:var(--cream)}
+  tbody tr:last-child td{border-bottom:none}
+  td.num{font-variant-numeric:tabular-nums}
+  td.muted{color:var(--muted)}
+  td .stack{display:flex;flex-direction:column;gap:2px}
+  td .stack small{color:var(--muted);font-size:.78rem}
+
+  /* Status badges */
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:50px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .b-lyrics_pending{background:#FEF3C7;color:#92400E}
+  .b-lyrics_ready{background:#DBEAFE;color:#1E40AF}
+  .b-song_generating{background:#EDE9FE;color:#5B21B6}
+  .b-awaiting_review{background:#FEF3C7;color:#92400E}
+  .b-approved,.b-delivered{background:#D1FAE5;color:#065F46}
+  .b-failed{background:#FEE2E2;color:#991B1B}
+  .b-refunded{background:#F3F4F6;color:#6B7280}
+  .b-pending{background:#FEF3C7;color:#92400E}
+  .b-applied{background:#D1FAE5;color:#065F46}
+  .b-rejected{background:#FEE2E2;color:#991B1B}
+
+  .empty{padding:60px 20px;text-align:center;color:var(--muted)}
+  .empty-emoji{font-size:2.4rem;margin-bottom:10px;opacity:.5}
+
+  /* ===== Drawer (order detail) ===== */
+  .drawer-overlay{position:fixed;inset:0;background:rgba(26,26,26,.5);backdrop-filter:blur(4px);z-index:50;display:none}
+  .drawer-overlay.open{display:block}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(680px,100%);background:var(--cream);box-shadow:-30px 0 80px rgba(0,0,0,.3);z-index:51;transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);overflow-y:auto;display:none}
+  .drawer.open{transform:none;display:block}
+  .drawer-head{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;z-index:1}
+  .drawer-head h2{font-size:1.2rem}
+  .drawer-head .x{width:34px;height:34px;border-radius:50%;background:var(--cream);border:none;font-size:1.4rem;color:var(--ink-soft)}
+  .drawer-head .x:hover{background:var(--burgundy);color:#fff}
+  .drawer-body{padding:24px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .panel-h{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:600;font-size:.85rem;display:flex;align-items:center;justify-content:space-between}
+  .panel-h .h-actions{display:flex;gap:6px}
+  .panel-b{padding:18px}
+  .kv{display:grid;grid-template-columns:130px 1fr;gap:10px 16px;font-size:.88rem}
+  .kv dt{color:var(--muted);font-weight:500}
+  .kv dd{color:var(--ink)}
+  .lyrics-box{background:var(--cream);padding:16px;border-radius:8px;font-family:Georgia,serif;font-size:.95rem;line-height:1.7;white-space:pre-wrap;max-height:340px;overflow-y:auto}
+  .song{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--cream);border-radius:10px;margin-bottom:8px}
+  .song .meta{flex:1;min-width:0}
+  .song .meta strong{display:block;font-size:.88rem;margin-bottom:2px}
+  .song .meta small{color:var(--muted);font-size:.75rem}
+  .song audio{flex:none;height:34px;max-width:260px}
+  .song .pill{font-size:.7rem;background:var(--gold);color:var(--ink);padding:3px 8px;border-radius:50px;font-weight:700;white-space:nowrap}
+  .rev{padding:14px 18px;border-bottom:1px solid var(--line)}
+  .rev:last-child{border:none}
+  .rev .head{display:flex;justify-content:space-between;margin-bottom:6px;font-size:.78rem;color:var(--muted)}
+  .rev .body{font-size:.9rem;margin-bottom:10px;color:var(--ink-soft)}
+  .rev .actions{display:flex;gap:6px}
+  .log{max-height:280px;overflow-y:auto}
+  .log-row{padding:10px 18px;font-size:.8rem;display:flex;gap:10px;border-bottom:1px solid var(--line)}
+  .log-row:last-child{border:none}
+  .log-row time{color:var(--muted);font-variant-numeric:tabular-nums;min-width:120px}
+  .log-row .actor{color:var(--burgundy);font-weight:600}
+  .quick-actions{display:flex;flex-wrap:wrap;gap:6px}
+  .form-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+  .form-row input,.form-row textarea{flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--cream)}
+  textarea{font-family:inherit;resize:vertical;min-height:60px;width:100%}
+
+  /* Toast */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:14px 20px;border-radius:50px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:100;font-size:.88rem;font-weight:500;opacity:0;transform:translateY(20px);transition:all .3s ease;pointer-events:none}
+  .toast.show{opacity:1;transform:none}
+  .toast.success{background:var(--green)}
+  .toast.error{background:var(--red)}
+
+  .skeleton{background:linear-gradient(90deg,var(--cream-dark) 0%,#fff 50%,var(--cream-dark) 100%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;height:14px}
+  @keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside>
+    <div class="logo"><svg class="logo-mark" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect class="bar bar-side" x="3" y="13" width="2.5" height="6" rx="1.25"/><rect class="bar bar-side" x="8" y="10" width="2.5" height="12" rx="1.25"/><rect class="bar bar-mid" x="14.75" y="5" width="2.5" height="22" rx="1.25"/><rect class="bar bar-side" x="21.5" y="10" width="2.5" height="12" rx="1.25"/><rect class="bar bar-side" x="26.5" y="13" width="2.5" height="6" rx="1.25"/></svg><span>Lyralo</span></div>
+    <nav class="menu">
+      <a href="#orders" class="active" data-view="orders">📦 Orders</a>
+      <a href="#review" data-view="review">⏳ Awaiting review <span class="badge" id="b-review" hidden></span></a>
+      <a href="#revisions" data-view="revisions">🔁 Revisions <span class="badge" id="b-revisions" hidden></span></a>
+      <a href="#flight" data-view="flight">✈️ In flight <span class="badge" id="b-flight" hidden></span></a>
+    </nav>
+    <div class="me">
+      <strong id="me-email">…</strong>
+      <span id="me-role">…</span>
+      <button id="logout">Sign out</button>
+    </div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <h1 id="view-title">Orders</h1>
+      <div class="actions">
+        <button class="btn btn-ghost" id="refresh">↻ Refresh</button>
+        <button class="btn btn-ghost" id="poll-now">⚡ Poll Suno now</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats" id="stats">
+      <div class="stat"><div class="label">Orders 24h</div><div class="value" id="s-24h">—</div></div>
+      <div class="stat"><div class="label">Orders 7d</div><div class="value" id="s-7d">—</div></div>
+      <div class="stat"><div class="label">Revenue 30d</div><div class="value accent" id="s-rev">—</div></div>
+      <div class="stat"><div class="label">Awaiting review</div><div class="value" id="s-review">—</div></div>
+      <div class="stat"><div class="label">Pending revisions</div><div class="value gold" id="s-revisions">—</div></div>
+      <div class="stat"><div class="label">In flight</div><div class="value" id="s-flight">—</div></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters" id="filter-bar">
+      <input type="search" id="q" placeholder="Search by email, name or order #…">
+      <button class="filter-chip active" data-status="all">All</button>
+      <button class="filter-chip" data-status="lyrics_pending">Lyrics pending</button>
+      <button class="filter-chip" data-status="song_generating">Generating</button>
+      <button class="filter-chip" data-status="awaiting_review">Awaiting review</button>
+      <button class="filter-chip" data-status="delivered">Delivered</button>
+      <button class="filter-chip" data-status="failed">Failed</button>
+    </div>
+
+    <!-- Orders table -->
+    <div class="table-wrap" id="list-wrap">
+      <div class="empty"><div class="empty-emoji">⏳</div>Loading…</div>
+    </div>
+  </main>
+</div>
+
+<!-- Order detail drawer -->
+<div class="drawer-overlay" id="drawer-overlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h2 id="d-title">Order</h2>
+    <button class="x" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-body" id="d-body"></div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* =============== Helpers =============== */
+  const $  = (s, p=document) => p.querySelector(s);
+  const $$ = (s, p=document) => Array.from(p.querySelectorAll(s));
+  const fmtDate = (s) => new Date(s).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+  const fmtTime = (s) => new Date(s).toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  const fmtMoney = (cents, cur='USD') => new Intl.NumberFormat('en-US', { style:'currency', currency: cur }).format((cents||0)/100);
+  const escape = (s) => String(s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const STATUS_LABEL = {
+    lyrics_pending:'Lyrics pending', lyrics_ready:'Lyrics ready', song_generating:'Generating',
+    awaiting_review:'Awaiting review', approved:'Approved', delivered:'Delivered',
+    refunded:'Refunded', failed:'Failed'
+  };
+  function badge(status){ return `<span class="badge b-${status}">${STATUS_LABEL[status] || status}</span>`; }
+  function toast(msg, type='info'){
+    const t = $('#toast'); t.textContent = msg; t.className = 'toast show ' + type;
+    setTimeout(() => t.classList.remove('show'), 2400);
+  }
+  async function api(path, opts={}){
+    const r = await fetch('/api/admin' + path, { credentials:'include', headers:{'Content-Type':'application/json'}, ...opts });
+    if (r.status === 401) { window.location.href = '/login'; throw new Error('unauth'); }
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  }
+
+  /* =============== State =============== */
+  let view = 'orders';
+  let activeStatus = 'all';
+  let searchQ = '';
+
+  /* =============== Init =============== */
+  (async () => {
+    try {
+      const me = await api('/me');
+      $('#me-email').textContent = me.admin.email;
+      $('#me-role').textContent = me.admin.role;
+    } catch { return; }
+    await refreshAll();
+    setInterval(() => loadStats(), 20000); // soft auto-refresh stats
+  })();
+
+  /* =============== Stats =============== */
+  async function loadStats(){
+    try {
+      const s = await api('/stats');
+      $('#s-24h').textContent = s.orders24h;
+      $('#s-7d').textContent  = s.orders7d;
+      $('#s-rev').textContent = fmtMoney(s.revenue30d_cents);
+      $('#s-review').textContent = s.pendingReview;
+      $('#s-revisions').textContent = s.pendingRevisions;
+      $('#s-flight').textContent = s.inFlight;
+      // Sidebar badges
+      const setBadge = (el, n) => { if (n > 0) { el.textContent = n; el.hidden = false; } else el.hidden = true; };
+      setBadge($('#b-review'), s.pendingReview);
+      setBadge($('#b-revisions'), s.pendingRevisions);
+      setBadge($('#b-flight'), s.inFlight);
+    } catch (e) { console.error(e); }
+  }
+
+  /* =============== Orders list =============== */
+  async function loadOrders(){
+    const params = new URLSearchParams();
+    if (activeStatus && activeStatus !== 'all') params.set('status', activeStatus);
+    if (searchQ) params.set('q', searchQ);
+    const wrap = $('#list-wrap');
+    wrap.innerHTML = `<div class="empty">Loading…</div>`;
+    try {
+      const { orders } = await api('/orders?' + params.toString());
+      if (!orders.length) {
+        wrap.innerHTML = `<div class="empty"><div class="empty-emoji">📭</div>No orders match these filters.</div>`;
+        return;
+      }
+      wrap.innerHTML = `
+        <table>
+          <thead>
+            <tr><th>Order</th><th>Customer</th><th>Bundle</th><th>Amount</th><th>Status</th><th>Revisions</th><th>Created</th></tr>
+          </thead>
+          <tbody>
+            ${orders.map(o => `
+              <tr data-id="${o.id}">
+                <td><strong>${escape(o.shopify_order_no || o.id.slice(0,8))}</strong></td>
+                <td><div class="stack"><span>${escape(o.customer_name || '—')}</span><small>${escape(o.customer_email)}</small></div></td>
+                <td>${o.bundle === 'complete' ? '🎁 Complete' : '🎵 Single'}</td>
+                <td class="num">${fmtMoney(o.amount_cents, o.currency)}</td>
+                <td>${badge(o.status)}</td>
+                <td class="num muted">${o.used_revisions}/${o.free_revisions === 999 ? '∞' : o.free_revisions}</td>
+                <td class="muted">${fmtDate(o.created_at)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+      $$('tbody tr', wrap).forEach(tr => tr.addEventListener('click', () => openOrder(tr.dataset.id)));
+    } catch (e) {
+      wrap.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+    }
+  }
+
+  /* =============== Revisions list (alt view) =============== */
+  async function loadRevisions(){
+    const wrap = $('#list-wrap');
+    wrap.innerHTML = `<div class="empty">Loading…</div>`;
+    try {
+      const { revisions } = await api('/revisions?status=' + (activeStatus === 'all' ? 'all' : 'pending'));
+      if (!revisions.length) {
+        wrap.innerHTML = `<div class="empty"><div class="empty-emoji">✅</div>No pending revisions — nice!</div>`;
+        return;
+      }
+      wrap.innerHTML = `
+        <table>
+          <thead><tr><th>Order</th><th>Customer</th><th>Type</th><th>Notes</th><th>Status</th><th>When</th><th></th></tr></thead>
+          <tbody>
+            ${revisions.map(r => `
+              <tr data-order="${r.order_id}" data-rev="${r.id}">
+                <td><strong>${escape(r.shopify_order_no || '')}</strong></td>
+                <td><div class="stack"><span>${escape(r.customer_name || '—')}</span><small>${escape(r.customer_email)}</small></div></td>
+                <td>${r.change_type}</td>
+                <td style="max-width:340px"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escape(r.customer_notes || '—')}</div></td>
+                <td>${badge(r.status)}</td>
+                <td class="muted">${fmtDate(r.created_at)}</td>
+                <td>${r.status === 'pending' ? `
+                  <button class="btn btn-success" data-act="approve">Approve</button>
+                  <button class="btn btn-danger" data-act="reject">Reject</button>` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+      $$('tbody tr', wrap).forEach(tr => {
+        tr.addEventListener('click', (e) => {
+          const act = e.target.closest('button')?.dataset.act;
+          if (act === 'approve') return approveRevision(tr.dataset.rev);
+          if (act === 'reject') return rejectRevision(tr.dataset.rev);
+          openOrder(tr.dataset.order);
+        });
+      });
+    } catch (e) { wrap.innerHTML = `<div class="empty">Error: ${e.message}</div>`; }
+  }
+
+  async function approveRevision(id){
+    if (!confirm('Approve this revision and trigger regeneration?')) return;
+    try { await api(`/revisions/${id}/approve`, { method:'POST', body: '{}' });
+      toast('Revision approved — regenerating', 'success');
+      await refreshAll();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+  async function rejectRevision(id){
+    const note = prompt('Reason (sent to customer):'); if (note === null) return;
+    try { await api(`/revisions/${id}/reject`, { method:'POST', body: JSON.stringify({ note }) });
+      toast('Revision rejected', 'success');
+      await refreshAll();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  /* =============== Order drawer =============== */
+  let currentOrderId = null;
+  async function openOrder(id){
+    currentOrderId = id;
+    $('#drawer-overlay').classList.add('open');
+    $('#drawer').classList.add('open');
+    $('#d-body').innerHTML = `<div class="empty">Loading…</div>`;
+    try {
+      const data = await api('/orders/' + id);
+      renderDrawer(data);
+    } catch (e) { $('#d-body').innerHTML = `<div class="empty">Error: ${e.message}</div>`; }
+  }
+  window.closeDrawer = () => { $('#drawer-overlay').classList.remove('open'); $('#drawer').classList.remove('open'); currentOrderId = null; };
+  $('#drawer-overlay').addEventListener('click', closeDrawer);
+
+  function renderDrawer({ order, lyrics, songs, revisions, log }){
+    $('#d-title').textContent = `${order.shopify_order_no || order.id.slice(0,8)} · ${badge(order.status).replace(/<[^>]+>/g,'')}`;
+    const q = order.quiz || {};
+    const currentSongs = songs.filter(s => s.is_current);
+    const otherSongs   = songs.filter(s => !s.is_current);
+
+    $('#d-body').innerHTML = `
+      <!-- Header -->
+      <div class="panel">
+        <div class="panel-h">
+          <span>Customer & Order</span>
+          <div class="h-actions">${badge(order.status)}</div>
+        </div>
+        <div class="panel-b">
+          <dl class="kv">
+            <dt>Customer</dt><dd><strong>${escape(order.customer_name || '—')}</strong> · ${escape(order.customer_email)}</dd>
+            <dt>Bundle</dt><dd>${order.bundle === 'complete' ? '🎁 Complete Gift (2 versions)' : '🎵 Single Song'}</dd>
+            <dt>Amount</dt><dd>${fmtMoney(order.amount_cents, order.currency)}</dd>
+            <dt>Revisions</dt><dd>${order.used_revisions} used / ${order.free_revisions === 999 ? 'unlimited' : order.free_revisions + ' free'}</dd>
+            <dt>Created</dt><dd>${new Date(order.created_at).toLocaleString()}</dd>
+            ${order.delivered_at ? `<dt>Delivered</dt><dd>${new Date(order.delivered_at).toLocaleString()}</dd>` : ''}
+          </dl>
+        </div>
+      </div>
+
+      <!-- Quiz brief -->
+      <div class="panel">
+        <div class="panel-h">Customer brief</div>
+        <div class="panel-b">
+          <dl class="kv">
+            <dt>For</dt><dd>${escape(q.recipient || '—')}${q.name ? ' (' + escape(q.name) + ')' : ''}</dd>
+            <dt>Occasion</dt><dd>${escape(q.occasion || '—')}</dd>
+            <dt>Genre</dt><dd>${escape(q.genre || '—')}</dd>
+            <dt>Mood</dt><dd>${escape(q.mood || '—')}</dd>
+            <dt>3 traits</dt><dd>${escape(q.traits || '—')}</dd>
+            <dt>Sender</dt><dd>${escape(q.senderName || '—')}</dd>
+            <dt>Story</dt><dd style="white-space:pre-wrap">${escape(q.story || '—')}</dd>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Lyrics -->
+      <div class="panel">
+        <div class="panel-h">
+          <span>Lyrics ${lyrics[0] ? '(v' + lyrics[0].version + ')' : ''}</span>
+          <div class="h-actions">
+            <button class="btn btn-ghost" onclick="regenLyrics()">↻ Regenerate lyrics + song</button>
+          </div>
+        </div>
+        <div class="panel-b">
+          ${lyrics[0]
+            ? `<div style="font-weight:600;font-family:Georgia,serif;font-size:1.1rem;margin-bottom:8px">${escape(lyrics[0].title || 'Untitled')}</div>
+               <div class="lyrics-box">${escape(lyrics[0].content)}</div>`
+            : `<div class="empty" style="padding:24px">Lyrics not yet generated.</div>`}
+        </div>
+      </div>
+
+      <!-- Songs -->
+      <div class="panel">
+        <div class="panel-h">
+          <span>Songs (${songs.length})</span>
+          <div class="h-actions">
+            <button class="btn btn-ghost" onclick="regenSong()">↻ Regenerate song only</button>
+            ${order.status === 'awaiting_review' && currentSongs.length
+              ? `<button class="btn btn-success" onclick="approveOrder()">✓ Approve & deliver</button>` : ''}
+          </div>
+        </div>
+        <div class="panel-b">
+          ${currentSongs.length
+            ? currentSongs.map((s, i) => songRow(s, i, true)).join('')
+            : '<div class="empty" style="padding:24px">No song ready yet.</div>'}
+          ${otherSongs.length
+            ? `<details style="margin-top:14px"><summary style="cursor:pointer;color:var(--muted);font-size:.82rem">Previous takes (${otherSongs.length})</summary>${otherSongs.map((s,i) => songRow(s, i, false)).join('')}</details>`
+            : ''}
+        </div>
+      </div>
+
+      <!-- Revisions -->
+      <div class="panel">
+        <div class="panel-h">
+          <span>Revisions (${revisions.length})</span>
+          <div class="h-actions">
+            <button class="btn btn-ghost" onclick="grantRevision()">+ Grant free revision</button>
+          </div>
+        </div>
+        <div class="panel-b" style="padding:0">
+          ${revisions.length ? revisions.map(r => revisionRow(r)).join('') : '<div class="empty" style="padding:24px">No revisions yet.</div>'}
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="panel">
+        <div class="panel-h">Internal notes</div>
+        <div class="panel-b">
+          <textarea id="d-notes" placeholder="Internal admin notes (not visible to customer)…">${escape(order.notes || '')}</textarea>
+          <div style="margin-top:8px;text-align:right"><button class="btn btn-primary" onclick="saveNotes()">Save notes</button></div>
+        </div>
+      </div>
+
+      <!-- Activity log -->
+      <div class="panel">
+        <div class="panel-h">Activity</div>
+        <div class="log">
+          ${log.length ? log.map(e => `
+            <div class="log-row">
+              <time>${fmtDate(e.created_at)} ${fmtTime(e.created_at)}</time>
+              <span class="actor">${escape(e.actor || 'system')}</span>
+              <span>${escape(e.action)}</span>
+            </div>
+          `).join('') : '<div class="empty" style="padding:18px">No activity.</div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  function songRow(s, i, isCurrent){
+    return `
+      <div class="song">
+        <div class="meta">
+          <strong>Take ${s.meta?.take || (i+1)} ${isCurrent ? '<span class="pill">CURRENT</span>' : ''}</strong>
+          <small>${s.genre || ''} · ${s.duration_sec ? Math.floor(s.duration_sec/60)+':'+String(s.duration_sec%60).padStart(2,'0') : '—'} · ${s.status}</small>
+        </div>
+        ${s.audio_url ? `<audio controls preload="none" src="${s.audio_url}"></audio>` : `<span class="badge b-${s.status}">${s.status}</span>`}
+      </div>`;
+  }
+
+  function revisionRow(r){
+    return `
+      <div class="rev">
+        <div class="head">
+          <span><strong>${r.requested_by}</strong> · ${r.change_type} · ${badge(r.status)}</span>
+          <time>${fmtDate(r.created_at)}</time>
+        </div>
+        <div class="body">${escape(r.customer_notes || '—')}</div>
+        ${r.status === 'pending' ? `
+          <div class="actions">
+            <button class="btn btn-success" onclick="approveRevision('${r.id}').then(() => openOrder('${currentOrderId}'))">Approve & regenerate</button>
+            <button class="btn btn-danger"  onclick="rejectRevision('${r.id}').then(() => openOrder('${currentOrderId}'))">Reject</button>
+          </div>` : ''}
+      </div>`;
+  }
+
+  /* =============== Order actions =============== */
+  window.approveRevision = approveRevision;
+  window.rejectRevision  = rejectRevision;
+
+  window.regenLyrics = async () => {
+    if (!confirm('Regenerate lyrics AND songs (counts as a new generation)?')) return;
+    try { await api(`/orders/${currentOrderId}/regenerate-lyrics`, { method:'POST', body:'{}' });
+      toast('Regeneration started', 'success'); openOrder(currentOrderId); refreshAll();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+  window.regenSong = async () => {
+    if (!confirm('Regenerate song(s) only (keep current lyrics)?')) return;
+    try { await api(`/orders/${currentOrderId}/regenerate-song`, { method:'POST', body:'{}' });
+      toast('Song regen started', 'success'); openOrder(currentOrderId); refreshAll();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+  window.approveOrder = async () => {
+    if (!confirm('Approve & email this song to the customer?')) return;
+    try { await api(`/orders/${currentOrderId}/approve`, { method:'POST', body:'{}' });
+      toast('Delivered to customer', 'success'); openOrder(currentOrderId); refreshAll();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+  window.grantRevision = async () => {
+    const reason = prompt('Reason for granting a free revision (optional):');
+    if (reason === null) return;
+    try { await api(`/orders/${currentOrderId}/grant-revision`, { method:'POST', body: JSON.stringify({ count: 1, reason }) });
+      toast('Free revision granted', 'success'); openOrder(currentOrderId); refreshAll();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+  window.saveNotes = async () => {
+    try { await api(`/orders/${currentOrderId}`, { method:'PATCH', body: JSON.stringify({ notes: $('#d-notes').value }) });
+      toast('Notes saved', 'success');
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
+  /* =============== Filters =============== */
+  let qTimer;
+  $('#q').addEventListener('input', (e) => {
+    clearTimeout(qTimer);
+    qTimer = setTimeout(() => { searchQ = e.target.value.trim(); loadOrders(); }, 250);
+  });
+  $$('.filter-chip').forEach(c => c.addEventListener('click', () => {
+    $$('.filter-chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    activeStatus = c.dataset.status;
+    if (view === 'orders' || view === 'review' || view === 'flight') loadOrders();
+    if (view === 'revisions') loadRevisions();
+  }));
+
+  /* =============== View routing =============== */
+  $$('nav.menu a').forEach(a => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    $$('nav.menu a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    view = a.dataset.view;
+    $('#view-title').textContent = a.textContent.replace(/\d+/g,'').trim();
+    if (view === 'orders')    { activeStatus = 'all'; setActiveChip('all'); loadOrders(); }
+    if (view === 'review')    { activeStatus = 'awaiting_review'; setActiveChip('awaiting_review'); loadOrders(); }
+    if (view === 'flight')    { activeStatus = 'song_generating'; setActiveChip('song_generating'); loadOrders(); }
+    if (view === 'revisions') { loadRevisions(); }
+  }));
+  function setActiveChip(s){ $$('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.status === s)); }
+
+  /* =============== Top actions =============== */
+  $('#refresh').addEventListener('click', refreshAll);
+  $('#poll-now').addEventListener('click', async () => {
+    try { const r = await api('/poll', { method:'POST', body:'{}' });
+      toast(`Polled ${r.polled} jobs (${r.updated} updated)`, 'success');
+      refreshAll();
+    } catch (e) { toast(e.message, 'error'); }
+  });
+  $('#logout').addEventListener('click', async () => {
+    await api('/auth/logout', { method:'POST', body:'{}' }).catch(()=>{});
+    window.location.href = '/login';
+  });
+
+  async function refreshAll(){
+    await loadStats();
+    if (view === 'revisions') await loadRevisions();
+    else await loadOrders();
+  }
+</script>
+</body>
+</html>

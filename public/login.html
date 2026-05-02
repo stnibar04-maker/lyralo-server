@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Sign In — Lyralo</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="theme-color" content="#7B1E3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --burgundy:#7B1E3E;--burgundy-dark:#5C1530;--gold:#D4A574;--gold-light:#E8C9A0;
+    --cream:#FBF7F2;--cream-dark:#F2EBE0;--ink:#1A1A1A;--ink-soft:#3D3D3D;
+    --muted:#6B6B6B;--line:#E8DFD3;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .wrap{width:100%;max-width:420px;text-align:center}
+  .logo{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:600;letter-spacing:-.015em;color:var(--burgundy);display:inline-flex;align-items:center;gap:14px;margin-bottom:6px;line-height:1}
+  .logo-mark{width:46px;height:46px;flex:none;color:inherit;overflow:visible}
+  .logo-mark .bar-side{fill:currentColor}
+  .logo-mark .bar-mid{fill:var(--gold)}
+  .sub{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:36px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:36px;box-shadow:0 20px 50px rgba(123,30,62,.08);text-align:left}
+  h2{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--ink);margin-bottom:24px;text-align:center}
+  label{display:block;font-size:.85rem;font-weight:600;color:var(--ink-soft);margin-bottom:6px;margin-top:14px}
+  input{width:100%;padding:14px 16px;border:2px solid var(--line);border-radius:12px;font-family:inherit;font-size:.95rem;color:var(--ink);background:var(--cream);transition:border-color .2s}
+  input:focus{outline:none;border-color:var(--burgundy);background:#fff}
+  .btn{width:100%;background:var(--burgundy);color:#fff;border:none;padding:14px;border-radius:50px;font-weight:700;font-size:.95rem;margin-top:24px;cursor:pointer;transition:all .2s;font-family:inherit}
+  .btn:hover{background:var(--burgundy-dark);transform:translateY(-1px)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .err{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;padding:12px 14px;border-radius:10px;font-size:.85rem;margin-top:18px;display:none}
+  .err.show{display:block}
+  .foot{margin-top:24px;font-size:.85rem;color:var(--muted)}
+  .foot a{color:var(--burgundy);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo"><svg class="logo-mark" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect class="bar bar-side" x="3" y="13" width="2.5" height="6" rx="1.25"/><rect class="bar bar-side" x="8" y="10" width="2.5" height="12" rx="1.25"/><rect class="bar bar-mid" x="14.75" y="5" width="2.5" height="22" rx="1.25"/><rect class="bar bar-side" x="21.5" y="10" width="2.5" height="12" rx="1.25"/><rect class="bar bar-side" x="26.5" y="13" width="2.5" height="6" rx="1.25"/></svg><span>Lyralo</span></div>
+  <div class="sub">Admin Dashboard</div>
+
+  <div class="card">
+    <h2>Sign In</h2>
+    <form id="login-form">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" placeholder="admin@lyralo.com" required>
+
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="Enter password" required>
+
+      <div class="err" id="err"></div>
+      <button class="btn" id="submit" type="submit">Sign In</button>
+    </form>
+  </div>
+
+  <div class="foot">
+    <a href="/track">Customer order tracking →</a>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('login-form');
+  const err  = document.getElementById('err');
+  const btn  = document.getElementById('submit');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.classList.remove('show');
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    try {
+      const r = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value
+        })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'login failed');
+      window.location.href = '/dashboard';
+    } catch (e) {
+      err.textContent = e.message === 'invalid credentials' ? 'Invalid email or password.' : e.message;
+      err.classList.add('show');
+      btn.disabled = false; btn.textContent = 'Sign In';
+    }
+  });
+</script>
+</body>
+</html>

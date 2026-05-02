@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Your Order — Lyralo</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="theme-color" content="#7B1E3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --burgundy:#7B1E3E;--burgundy-dark:#5C1530;--gold:#D4A574;--gold-light:#E8C9A0;
+    --cream:#FBF7F2;--cream-dark:#F2EBE0;--ink:#1A1A1A;--ink-soft:#3D3D3D;
+    --muted:#6B6B6B;--line:#E8DFD3;
+    --green:#10B981;--blue:#3B82F6;--amber:#F59E0B;--purple:#8B5CF6;--red:#EF4444;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;line-height:1.55}
+  h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;line-height:1.2}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer}
+  .container{max-width:760px;margin:0 auto;padding:32px 20px}
+
+  /* Header */
+  header{background:#fff;border-bottom:1px solid var(--line)}
+  .nav{max-width:1180px;margin:0 auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
+  .logo{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:600;letter-spacing:-.015em;color:var(--burgundy);display:flex;align-items:center;gap:10px;line-height:1}
+  .logo-mark{width:30px;height:30px;flex:none;color:inherit;overflow:visible}
+  .logo-mark .bar-side{fill:currentColor}
+  .logo-mark .bar-mid{fill:var(--gold)}
+  .nav a.back{font-size:.88rem;color:var(--ink-soft);font-weight:500}
+  .nav a.back:hover{color:var(--burgundy)}
+
+  /* Hero */
+  .intro{text-align:center;margin-bottom:32px}
+  .intro h1{font-size:2.4rem;color:var(--ink);margin-bottom:10px}
+  .intro p{color:var(--muted);max-width:480px;margin:0 auto}
+
+  /* Lookup card */
+  .lookup{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;gap:10px;flex-wrap:wrap;box-shadow:0 4px 16px rgba(123,30,62,.05)}
+  .lookup input{flex:1;min-width:200px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--cream);font-family:inherit;font-size:.95rem}
+  .lookup input:focus{outline:none;border-color:var(--burgundy)}
+  .btn{background:var(--burgundy);color:#fff;border:none;padding:14px 24px;border-radius:50px;font-weight:600;font-size:.92rem;transition:all .2s}
+  .btn:hover{background:var(--burgundy-dark);transform:translateY(-1px)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+  /* Order card */
+  .orders{margin-top:28px;display:flex;flex-direction:column;gap:18px}
+  .order{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 4px 16px rgba(123,30,62,.05)}
+  .order-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+  .order-h h2{font-size:1.2rem}
+  .order-h small{color:var(--muted);font-size:.82rem;display:block;margin-top:2px}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:50px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .b-lyrics_pending,.b-lyrics_ready,.b-song_generating,.b-awaiting_review{background:#FEF3C7;color:#92400E}
+  .b-delivered,.b-approved{background:#D1FAE5;color:#065F46}
+  .b-failed{background:#FEE2E2;color:#991B1B}
+  .b-refunded{background:#F3F4F6;color:#6B7280}
+
+  /* Status pipeline */
+  .pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0;padding:14px;background:var(--cream);border-radius:12px;font-size:.78rem;text-align:center;color:var(--muted)}
+  .pipeline .step{padding:8px 4px;border-radius:8px}
+  .pipeline .step.done{background:rgba(16,185,129,.12);color:#065F46;font-weight:600}
+  .pipeline .step.active{background:rgba(123,30,62,.1);color:var(--burgundy);font-weight:600;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+
+  /* Songs */
+  .songs{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+  .song{background:var(--cream);border-radius:12px;padding:14px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .song .meta{flex:1;min-width:180px}
+  .song .meta strong{display:block;font-size:.95rem}
+  .song .meta small{color:var(--muted);font-size:.78rem}
+  .song audio{flex:1;min-width:240px;height:38px}
+  .song .dl{font-size:.82rem;color:var(--burgundy);font-weight:600;white-space:nowrap}
+
+  /* Revision section */
+  .rev-section{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+  .rev-section h3{font-size:.95rem;margin-bottom:10px}
+  .rev-section .info{font-size:.85rem;color:var(--muted);margin-bottom:12px}
+  .rev-section .info strong{color:var(--burgundy)}
+  .rev-form{display:none}
+  .rev-form.open{display:block}
+  .rev-form textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--cream);font-family:inherit;font-size:.92rem;min-height:100px;resize:vertical;line-height:1.55;margin-bottom:10px}
+  .rev-form textarea:focus{outline:none;border-color:var(--burgundy)}
+  .rev-link{color:var(--burgundy);font-size:.85rem;font-weight:600;cursor:pointer}
+  .rev-row{padding:10px 14px;background:var(--cream);border-radius:8px;font-size:.85rem;margin-top:8px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .rev-row .who{color:var(--muted);font-size:.75rem}
+
+  /* Footer */
+  footer{padding:32px 20px;text-align:center;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);background:#fff;margin-top:40px}
+  footer a{color:var(--burgundy);font-weight:600;margin:0 10px}
+
+  /* Toast */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:50px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:100;font-size:.88rem;font-weight:500;opacity:0;transition:all .3s ease;pointer-events:none}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast.success{background:var(--green)}
+  .toast.error{background:var(--red)}
+
+  .empty{text-align:center;padding:40px 20px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:16px}
+  .empty-emoji{font-size:2.4rem;opacity:.5;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a href="/" class="logo"><svg class="logo-mark" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect class="bar bar-side" x="3" y="13" width="2.5" height="6" rx="1.25"/><rect class="bar bar-side" x="8" y="10" width="2.5" height="12" rx="1.25"/><rect class="bar bar-mid" x="14.75" y="5" width="2.5" height="22" rx="1.25"/><rect class="bar bar-side" x="21.5" y="10" width="2.5" height="12" rx="1.25"/><rect class="bar bar-side" x="26.5" y="13" width="2.5" height="6" rx="1.25"/></svg><span>Lyralo</span></a>
+    <a class="back" href="https://lyralo.com">← Back to store</a>
+  </div>
+</header>
+
+<div class="container">
+  <div class="intro">
+    <h1>Track Your Order</h1>
+    <p>Enter the email you used at checkout to listen to your songs and request revisions.</p>
+  </div>
+
+  <form class="lookup" id="lookup-form">
+    <input type="email" id="email" placeholder="your@email.com" required autocomplete="email">
+    <button class="btn" id="lookup-btn" type="submit">Find my songs</button>
+  </form>
+
+  <div id="results" class="orders"></div>
+</div>
+
+<footer>
+  Lyralo · <a href="mailto:hello@lyralo.com">Contact</a> · <a href="https://lyralo.com">Store</a>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $  = (s, p=document) => p.querySelector(s);
+  const $$ = (s, p=document) => Array.from(p.querySelectorAll(s));
+  const escape = (s) => String(s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const fmtDate = (s) => new Date(s).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+  const STATUS_LABEL = {
+    lyrics_pending:'Writing lyrics', lyrics_ready:'Lyrics ready', song_generating:'Producing song',
+    awaiting_review:'Final review', approved:'Approved', delivered:'Delivered',
+    refunded:'Refunded', failed:'Failed'
+  };
+  const PIPELINE = ['lyrics_pending','song_generating','awaiting_review','delivered'];
+  const PIPELINE_LABEL = ['Lyrics','Producing','Final review','Delivered'];
+  function badge(status){ return `<span class="badge b-${status}">${STATUS_LABEL[status] || status}</span>`; }
+  function pipeline(status){
+    const idx = PIPELINE.indexOf(status === 'lyrics_ready' ? 'song_generating' : status === 'approved' ? 'delivered' : status);
+    return `<div class="pipeline">${PIPELINE_LABEL.map((lbl, i) =>
+      `<div class="step ${i<idx?'done':i===idx?'active':''}">${i<idx?'✓ ':''}${lbl}</div>`).join('')}</div>`;
+  }
+  function toast(msg, type='info'){
+    const t = $('#toast'); t.textContent = msg; t.className = 'toast show ' + type;
+    setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  // ---- prefill from query string (?email=) and auto-search ----
+  const params = new URLSearchParams(location.search);
+  if (params.get('email')) {
+    $('#email').value = params.get('email');
+    setTimeout(() => $('#lookup-form').dispatchEvent(new Event('submit', { cancelable:true })), 50);
+  }
+
+  // ---- lookup ----
+  $('#lookup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = $('#email').value.trim().toLowerCase();
+    if (!email) return;
+    const btn = $('#lookup-btn');
+    btn.disabled = true; btn.textContent = 'Searching…';
+    try {
+      const r = await fetch('/api/customer/orders?email=' + encodeURIComponent(email));
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'lookup failed');
+      renderOrders(data.orders, email);
+    } catch (err) {
+      $('#results').innerHTML = `<div class="empty"><div class="empty-emoji">⚠️</div>${err.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Find my songs';
+    }
+  });
+
+  function renderOrders(orders, email){
+    if (!orders.length) {
+      $('#results').innerHTML = `<div class="empty"><div class="empty-emoji">📭</div>No orders found for <strong>${escape(email)}</strong>.<br><br>If you ordered with a different email, try that one.</div>`;
+      return;
+    }
+    $('#results').innerHTML = orders.map(o => orderCard(o, email)).join('');
+    $$('.rev-link').forEach(el => el.addEventListener('click', () => {
+      el.parentElement.querySelector('.rev-form').classList.toggle('open');
+    }));
+    $$('.rev-form form').forEach(f => f.addEventListener('submit', (e) => submitRevision(e, email)));
+  }
+
+  function orderCard(o, email){
+    const remaining = (o.free_revisions === 999 ? '∞' : (o.free_revisions - o.used_revisions));
+    const lyrics = o.lyrics?.[0];
+    return `
+      <div class="order" data-id="${o.id}">
+        <div class="order-h">
+          <div>
+            <h2>Order ${escape(o.shopify_order_no || '')}</h2>
+            <small>${o.bundle === 'complete' ? '🎁 Complete Gift' : '🎵 Single Song'} · placed ${fmtDate(o.created_at)}</small>
+          </div>
+          ${badge(o.status)}
+        </div>
+
+        ${o.status !== 'delivered' && o.status !== 'failed' ? pipeline(o.status) : ''}
+
+        ${(o.songs && o.songs.length) ? `
+          <div class="songs">
+            ${o.songs.map((s, i) => `
+              <div class="song">
+                <div class="meta">
+                  <strong>${o.songs.length > 1 ? 'Version ' + (i+1) : 'Your custom song'}${lyrics?.title ? ' — ' + escape(lyrics.title) : ''}</strong>
+                  <small>${escape(s.genre || '')}${s.duration_sec ? ' · ' + Math.floor(s.duration_sec/60)+':'+String(s.duration_sec%60).padStart(2,'0') : ''}</small>
+                </div>
+                ${s.audio_url ? `<audio controls preload="none" src="${s.audio_url}"></audio>
+                  <a class="dl" href="${s.audio_url}" download>⬇ MP3</a>` : ''}
+              </div>`).join('')}
+          </div>` : `
+          <div class="empty" style="padding:20px;border:none;background:var(--cream)">
+            <div class="empty-emoji">🎶</div>
+            ${o.status === 'failed' ? 'Something went wrong with this order — please contact us.' : 'Your song is being created. We\\'ll email you when it\\'s ready.'}
+          </div>`}
+
+        ${o.status === 'delivered' ? `
+          <div class="rev-section">
+            <h3>Want a tweak?</h3>
+            <p class="info">You have <strong>${remaining}</strong> free revision${remaining === 1 ? '' : 's'} remaining. Tell us what you'd like changed and our team will rework the song.</p>
+            <a class="rev-link">+ Request a revision</a>
+            <div class="rev-form">
+              <form>
+                <input type="hidden" name="orderId" value="${o.id}">
+                <textarea name="notes" placeholder="What would you like to change? (e.g. 'use a slower tempo', 'mention our daughter Lila in the chorus', 'try a male vocalist')" required minlength="5" maxlength="800"></textarea>
+                <button type="submit" class="btn">Send revision request</button>
+              </form>
+            </div>
+          </div>` : ''}
+      </div>`;
+  }
+
+  async function submitRevision(e, email){
+    e.preventDefault();
+    const f = e.target;
+    const orderId = f.orderId.value;
+    const notes = f.notes.value.trim();
+    if (notes.length < 5) return toast('Please describe what you would like changed', 'error');
+    const btn = f.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const r = await fetch(`/api/customer/orders/${orderId}/revisions`, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ email, customer_notes: notes, change_type:'lyrics' })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.message || data.error || 'failed');
+      toast('Revision request sent — we\'ll email you within 6h', 'success');
+      // refresh
+      $('#lookup-form').dispatchEvent(new Event('submit', { cancelable:true }));
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Send revision request';
+    }
+  }
+</script>
+</body>
+</html>
