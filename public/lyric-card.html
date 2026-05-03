@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lyric Card — Lyralo</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --burgundy:#7B1E3E;--burgundy-dark:#5C1530;--gold:#D4A574;--gold-light:#E8C9A0;
+    --cream:#FBF7F2;--ink:#1A1A1A;--ink-soft:#3D3D3D;--muted:#6B6B6B;--line:#E8DFD3;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:#E8E3DC;padding:24px 16px;min-height:100vh;color:var(--ink)}
+
+  /* Toolbar (hidden when printing) */
+  .toolbar{max-width:760px;margin:0 auto 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .toolbar a{color:var(--muted);font-size:.88rem;text-decoration:none}
+  .toolbar a:hover{color:var(--burgundy)}
+  .toolbar .actions{display:flex;gap:10px}
+  .btn{background:var(--burgundy);color:#fff;border:none;padding:11px 20px;border-radius:50px;font-weight:600;font-size:.88rem;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{background:var(--burgundy-dark)}
+  .btn-ghost{background:#fff;color:var(--ink-soft);border:1px solid var(--line)}
+  .btn-ghost:hover{background:var(--cream)}
+
+  /* Card — A4-ish portrait ratio */
+  .card-wrap{max-width:760px;margin:0 auto;perspective:1000px}
+  .card{
+    background:linear-gradient(180deg,var(--cream) 0%,#fff 100%);
+    border:1px solid var(--gold);
+    border-radius:6px;
+    padding:60px 56px;
+    box-shadow:0 30px 60px rgba(0,0,0,.18),0 0 0 8px rgba(255,255,255,.5);
+    position:relative;
+    overflow:hidden;
+    aspect-ratio:1/1.414; /* A4 portrait ratio */
+  }
+
+  /* Decorative corner ornaments */
+  .card::before,.card::after{
+    content:"";position:absolute;width:100px;height:100px;border:2px solid var(--gold);opacity:.5;
+  }
+  .card::before{top:18px;left:18px;border-right:none;border-bottom:none}
+  .card::after{bottom:18px;right:18px;border-left:none;border-top:none}
+
+  /* Brand mark */
+  .mark{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px}
+  .mark-icon{display:flex;gap:2px;height:30px;align-items:center}
+  .mark-icon span{width:3px;background:var(--burgundy);border-radius:2px;display:inline-block}
+  .mark-icon span:nth-child(1){height:30%}
+  .mark-icon span:nth-child(2){height:55%}
+  .mark-icon span:nth-child(3){height:90%;background:var(--gold)}
+  .mark-icon span:nth-child(4){height:55%}
+  .mark-icon span:nth-child(5){height:30%}
+  .mark-text{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:600;letter-spacing:-.015em;color:var(--burgundy)}
+
+  /* Eyebrow */
+  .eyebrow{text-align:center;font-family:'Inter',sans-serif;font-size:.7rem;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:6px}
+
+  /* Title */
+  .title{
+    text-align:center;
+    font-family:'Playfair Display',serif;
+    font-size:2.6rem;
+    font-weight:600;
+    line-height:1.1;
+    color:var(--ink);
+    margin-bottom:8px;
+    font-style:italic;
+  }
+
+  /* Sub */
+  .sub{text-align:center;color:var(--muted);font-size:.95rem;margin-bottom:32px;font-style:italic}
+  .sub strong{color:var(--burgundy);font-style:normal;font-weight:600}
+
+  /* Divider with center ornament */
+  .divider{display:flex;align-items:center;gap:16px;margin:0 0 32px;color:var(--gold)}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .divider .dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
+
+  /* Lyrics body */
+  .lyrics{
+    font-family:'Playfair Display',serif;
+    font-size:1.1rem;
+    line-height:1.85;
+    color:var(--ink);
+    text-align:center;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    margin-bottom:36px;
+    font-weight:400;
+  }
+
+  /* Footer info */
+  .footer{
+    border-top:1px solid var(--line);
+    padding-top:18px;
+    text-align:center;
+    color:var(--muted);
+    font-size:.78rem;
+    font-style:italic;
+    line-height:1.6;
+  }
+  .footer strong{color:var(--ink);font-weight:600;font-style:normal}
+
+  .loading{text-align:center;padding:60px;color:var(--muted)}
+  .error{text-align:center;padding:40px;color:#991B1B;background:#FEE2E2;border-radius:12px;margin:0 auto;max-width:400px}
+
+  /* Print styles */
+  @media print{
+    body{background:#fff;padding:0;margin:0}
+    .toolbar{display:none !important}
+    .card-wrap{max-width:100%;margin:0;perspective:none}
+    .card{
+      box-shadow:none;
+      border-radius:0;
+      border:1px solid var(--gold);
+      page-break-inside:avoid;
+      aspect-ratio:auto;
+      min-height:100vh;
+    }
+    @page{size:A4 portrait;margin:0}
+  }
+
+  @media(max-width:640px){
+    body{padding:14px 8px}
+    .card{padding:40px 28px}
+    .title{font-size:1.9rem}
+    .lyrics{font-size:.98rem}
+    .toolbar{flex-direction:column;align-items:stretch}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <a href="/track" id="back-link">← Back to your library</a>
+  <div class="actions">
+    <button class="btn btn-ghost" onclick="window.print()">🖨️ Print</button>
+    <button class="btn" onclick="window.print()">📄 Download as PDF</button>
+  </div>
+</div>
+
+<div class="card-wrap" id="card-wrap">
+  <div class="loading">⏳ Loading your lyric card…</div>
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const email = params.get('email');
+  const orderId = params.get('orderId');
+
+  function escape(s){
+    return String(s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  async function load(){
+    if (!email || !orderId) {
+      document.getElementById('card-wrap').innerHTML = `<div class="error">Missing email or orderId in the URL.</div>`;
+      return;
+    }
+    document.getElementById('back-link').href = '/track?email=' + encodeURIComponent(email);
+
+    try {
+      const r = await fetch('/api/customer/orders?email=' + encodeURIComponent(email));
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'lookup failed');
+
+      const order = (data.orders || []).find(o => o.id === orderId);
+      if (!order) {
+        document.getElementById('card-wrap').innerHTML = `<div class="error">Order not found for this email.</div>`;
+        return;
+      }
+
+      const lyrics = order.lyrics?.[0];
+      if (!lyrics) {
+        document.getElementById('card-wrap').innerHTML = `<div class="error">No lyrics found for this order.</div>`;
+        return;
+      }
+
+      const q = order.quiz || {};
+      const recipient = q.name || q.recipient || '';
+      const occasion = q.occasion || '';
+      const sender = q.senderName || '';
+      const date = new Date(order.delivered_at || order.created_at).toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
+
+      document.getElementById('card-wrap').innerHTML = `
+        <div class="card">
+          <div class="mark">
+            <div class="mark-icon">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="mark-text">Lyralo</div>
+          </div>
+
+          <div class="eyebrow">A custom song</div>
+          <h1 class="title">${escape(lyrics.title || 'Untitled')}</h1>
+          <p class="sub">${recipient ? `For <strong>${escape(recipient)}</strong>` : ''}${recipient && occasion ? ' &middot; ' : ''}${escape(occasion)}</p>
+
+          <div class="divider"><span class="dot"></span></div>
+
+          <div class="lyrics">${escape(lyrics.content)}</div>
+
+          <div class="footer">
+            ${sender ? `Created with love by <strong>${escape(sender)}</strong><br>` : ''}
+            Delivered ${escape(date)} &middot; ${escape(order.shopify_order_no || '')}<br>
+            <span style="color:var(--gold)">lyralo.com</span> &middot; one-of-a-kind songs
+          </div>
+        </div>
+      `;
+    } catch (e) {
+      document.getElementById('card-wrap').innerHTML = `<div class="error">⚠️ ${e.message}</div>`;
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

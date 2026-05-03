@@ -41,6 +41,7 @@ app.use(express.static(join(__dirname, 'public')));
 // Pretty routes for the SPA pages
 app.get('/', (req, res) => res.sendFile(join(__dirname, 'public', 'track.html')));
 app.get('/track', (req, res) => res.sendFile(join(__dirname, 'public', 'track.html')));
+app.get('/lyric-card', (req, res) => res.sendFile(join(__dirname, 'public', 'lyric-card.html')));
 app.get('/login', (req, res) => res.sendFile(join(__dirname, 'public', 'login.html')));
 app.get('/dashboard', (req, res) => {
   // Soft-redirect to /login if no auth cookie

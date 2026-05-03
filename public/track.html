@@ -76,9 +76,12 @@
   .song .dl{font-size:.82rem;color:var(--burgundy);font-weight:600;white-space:nowrap}
 
   /* Lyrics box */
-  .lyrics-toggle{display:inline-flex;align-items:center;gap:6px;color:var(--burgundy);font-size:.85rem;font-weight:600;cursor:pointer;margin-top:14px;user-select:none}
+  .lyrics-actions{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+  .lyrics-toggle{display:inline-flex;align-items:center;gap:6px;color:var(--burgundy);font-size:.88rem;font-weight:600;cursor:pointer;user-select:none}
   .lyrics-toggle::after{content:"▾";transition:transform .2s ease}
   .lyrics-toggle.open::after{transform:rotate(180deg)}
+  .lyric-card-btn{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(90deg,var(--gold),#E8C9A0);color:var(--ink);font-size:.85rem;font-weight:600;padding:8px 16px;border-radius:50px;text-decoration:none;transition:all .2s ease;border:1px solid var(--gold)}
+  .lyric-card-btn:hover{background:var(--gold);transform:translateY(-1px);box-shadow:0 4px 12px rgba(212,165,116,.3)}
   .lyrics-box{display:none;margin-top:12px;background:var(--cream);border-left:3px solid var(--gold);border-radius:8px;padding:18px 22px;font-family:Georgia,'Playfair Display',serif;font-style:italic;font-size:.95rem;line-height:1.7;color:var(--ink);white-space:pre-wrap;max-height:340px;overflow-y:auto}
   .lyrics-box.open{display:block}
   .lyrics-title{font-family:'Playfair Display',Georgia,serif;font-style:normal;font-size:1.05rem;font-weight:600;color:var(--burgundy);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
@@ -266,7 +269,13 @@
           </div>`}
 
         ${lyrics ? `
-          <div class="lyrics-toggle" data-toggle-lyrics>📜 View lyrics</div>
+          <div class="lyrics-actions">
+            <span class="lyrics-toggle" data-toggle-lyrics>📜 View lyrics</span>
+            ${o.bundle === 'complete' ? `
+              <a class="lyric-card-btn" href="/lyric-card?orderId=${encodeURIComponent(o.id)}&email=${encodeURIComponent(email)}" target="_blank" rel="noopener">
+                ✨ Get printable lyric card
+              </a>` : ''}
+          </div>
           <div class="lyrics-box" data-lyrics>
             ${lyrics.title ? `<div class="lyrics-title">${escape(lyrics.title)}</div>` : ''}
             ${escape(lyrics.content)}
