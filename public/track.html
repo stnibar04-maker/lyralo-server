@@ -117,8 +117,8 @@
     <p>Enter the email you used at checkout to listen to your songs and request revisions.</p>
   </div>
 
-  <form class="lookup" id="lookup-form">
-    <input type="email" id="email" placeholder="your@email.com" required autocomplete="email">
+  <form class="lookup" id="lookup-form" method="get" action="/track">
+    <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">
     <button class="btn" id="lookup-btn" type="submit">Find my songs</button>
   </form>
 
