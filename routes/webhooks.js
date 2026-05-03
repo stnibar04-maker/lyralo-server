@@ -104,8 +104,14 @@ async function processNewOrder(order) {
   await logActivity(orderId, 'system', 'order.received', { shopify_id: order.id, bundle });
 
   // Fire and forget receipt email (don't block pipeline)
-  sendOrderReceived({ to: email, name, orderNo: order.name || order.order_number })
-    .catch(e => console.error('[email] receipt', e.message));
+  sendOrderReceived({
+    to: email,
+    name,
+    orderNo: order.name || order.order_number,
+    recipient: quiz.recipient,
+    occasion: quiz.occasion,
+    bundle
+  }).catch(e => console.error('[email] receipt', e.message));
 
   // Kick off lyrics → song
   try {
