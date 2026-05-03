@@ -154,20 +154,13 @@
     setTimeout(() => t.classList.remove('show'), 2400);
   }
 
-  // ---- prefill from query string (?email=) and auto-search ----
-  const params = new URLSearchParams(location.search);
-  if (params.get('email')) {
-    $('#email').value = params.get('email');
-    setTimeout(() => $('#lookup-form').dispatchEvent(new Event('submit', { cancelable:true })), 50);
-  }
-
-  // ---- lookup ----
-  $('#lookup-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = $('#email').value.trim().toLowerCase();
-    if (!email) return;
+  // ---- core lookup function (callable from form submit OR URL prefill) ----
+  async function performLookup(rawEmail) {
+    const email = String(rawEmail || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) return;
     const btn = $('#lookup-btn');
-    btn.disabled = true; btn.textContent = 'Searching…';
+    if (btn) { btn.disabled = true; btn.textContent = 'Searching…'; }
+    $('#results').innerHTML = `<div class="empty"><div class="empty-emoji">⏳</div>Searching for your songs…</div>`;
     try {
       const r = await fetch('/api/customer/orders?email=' + encodeURIComponent(email));
       const data = await r.json();
@@ -176,9 +169,28 @@
     } catch (err) {
       $('#results').innerHTML = `<div class="empty"><div class="empty-emoji">⚠️</div>${err.message}</div>`;
     } finally {
-      btn.disabled = false; btn.textContent = 'Find my songs';
+      if (btn) { btn.disabled = false; btn.textContent = 'Find my songs'; }
     }
+  }
+
+  // ---- bind form submit ----
+  $('#lookup-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    performLookup($('#email').value);
   });
+
+  // ---- bind button click as a backup (in case form submit fails to fire) ----
+  $('#lookup-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    performLookup($('#email').value);
+  });
+
+  // ---- if URL has ?email=, auto-search ----
+  const _params = new URLSearchParams(location.search);
+  if (_params.get('email')) {
+    $('#email').value = _params.get('email');
+    performLookup(_params.get('email'));
+  }
 
   function renderOrders(orders, email){
     if (!orders.length) {
