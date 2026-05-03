@@ -75,16 +75,33 @@
   .song audio{flex:1;min-width:240px;height:38px}
   .song .dl{font-size:.82rem;color:var(--burgundy);font-weight:600;white-space:nowrap}
 
+  /* Lyrics box */
+  .lyrics-toggle{display:inline-flex;align-items:center;gap:6px;color:var(--burgundy);font-size:.85rem;font-weight:600;cursor:pointer;margin-top:14px;user-select:none}
+  .lyrics-toggle::after{content:"▾";transition:transform .2s ease}
+  .lyrics-toggle.open::after{transform:rotate(180deg)}
+  .lyrics-box{display:none;margin-top:12px;background:var(--cream);border-left:3px solid var(--gold);border-radius:8px;padding:18px 22px;font-family:Georgia,'Playfair Display',serif;font-style:italic;font-size:.95rem;line-height:1.7;color:var(--ink);white-space:pre-wrap;max-height:340px;overflow-y:auto}
+  .lyrics-box.open{display:block}
+  .lyrics-title{font-family:'Playfair Display',Georgia,serif;font-style:normal;font-size:1.05rem;font-weight:600;color:var(--burgundy);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+
   /* Revision section */
   .rev-section{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
-  .rev-section h3{font-size:.95rem;margin-bottom:10px}
+  .rev-section h3{font-size:1rem;margin-bottom:10px}
   .rev-section .info{font-size:.85rem;color:var(--muted);margin-bottom:12px}
   .rev-section .info strong{color:var(--burgundy)}
   .rev-form{display:none}
   .rev-form.open{display:block}
-  .rev-form textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--cream);font-family:inherit;font-size:.92rem;min-height:100px;resize:vertical;line-height:1.55;margin-bottom:10px}
-  .rev-form textarea:focus{outline:none;border-color:var(--burgundy)}
-  .rev-link{color:var(--burgundy);font-size:.85rem;font-weight:600;cursor:pointer}
+  .rev-form .field{margin-bottom:14px}
+  .rev-form label{display:block;font-size:.82rem;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+  .rev-form label .opt-tag{font-weight:400;color:var(--muted);font-size:.78rem;margin-left:4px}
+  .rev-form select,.rev-form textarea,.rev-form input[type=text]{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--cream);font-family:inherit;font-size:.92rem;color:var(--ink);transition:border-color .2s ease}
+  .rev-form select:focus,.rev-form textarea:focus,.rev-form input:focus{outline:none;border-color:var(--burgundy)}
+  .rev-form textarea{min-height:90px;resize:vertical;line-height:1.55}
+  .rev-form .row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:520px){.rev-form .row-2{grid-template-columns:1fr}}
+  .rev-link{color:var(--burgundy);font-size:.9rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+  .rev-link:hover{text-decoration:underline}
+  .rev-history{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+  .rev-history-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;margin-bottom:8px}
   .rev-row{padding:10px 14px;background:var(--cream);border-radius:8px;font-size:.85rem;margin-top:8px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .rev-row .who{color:var(--muted);font-size:.75rem}
 
@@ -198,9 +215,21 @@
       return;
     }
     $('#results').innerHTML = orders.map(o => orderCard(o, email)).join('');
+
+    // Toggle revision form open/close
     $$('.rev-link').forEach(el => el.addEventListener('click', () => {
       el.parentElement.querySelector('.rev-form').classList.toggle('open');
     }));
+
+    // Toggle lyrics box open/close
+    $$('[data-toggle-lyrics]').forEach(el => el.addEventListener('click', () => {
+      const box = el.parentElement.querySelector('[data-lyrics]');
+      el.classList.toggle('open');
+      box.classList.toggle('open');
+      el.firstChild.textContent = el.classList.contains('open') ? '📜 Hide lyrics ' : '📜 View lyrics ';
+    }));
+
+    // Wire revision form submits
     $$('.rev-form form').forEach(f => f.addEventListener('submit', (e) => submitRevision(e, email)));
   }
 
@@ -236,15 +265,72 @@
             ${o.status === 'failed' ? 'Something went wrong with this order — please contact us.' : "Your song is being created. We'll email you when it's ready."}
           </div>`}
 
+        ${lyrics ? `
+          <div class="lyrics-toggle" data-toggle-lyrics>📜 View lyrics</div>
+          <div class="lyrics-box" data-lyrics>
+            ${lyrics.title ? `<div class="lyrics-title">${escape(lyrics.title)}</div>` : ''}
+            ${escape(lyrics.content)}
+          </div>` : ''}
+
         ${o.status === 'delivered' ? `
           <div class="rev-section">
             <h3>Want a tweak?</h3>
-            <p class="info">You have <strong>${remaining}</strong> free revision${remaining === 1 ? '' : 's'} remaining. Tell us what you'd like changed and our team will rework the song.</p>
+            <p class="info">You have <strong>${remaining}</strong> free revision${remaining === 1 ? '' : 's'} remaining. Choose what to change — our team will rework the song and email you in ~6h.</p>
             <a class="rev-link">+ Request a revision</a>
             <div class="rev-form">
               <form>
                 <input type="hidden" name="orderId" value="${o.id}">
-                <textarea name="notes" placeholder="What would you like to change? (e.g. 'use a slower tempo', 'mention our daughter Lila in the chorus', 'try a male vocalist')" required minlength="5" maxlength="800"></textarea>
+
+                <div class="field">
+                  <label>What would you like to change?</label>
+                  <select name="changeType" required>
+                    <option value="lyrics">📝 The lyrics (rewrite the words)</option>
+                    <option value="vocals">🎙️ The vocals (different singer / take)</option>
+                    <option value="genre">🎸 The musical style / genre</option>
+                    <option value="mood">💭 The mood / vibe</option>
+                    <option value="full">🔄 Full rework (lyrics + music)</option>
+                  </select>
+                </div>
+
+                <div class="row-2">
+                  <div class="field">
+                    <label>New style preference <span class="opt-tag">(optional)</span></label>
+                    <select name="newGenre">
+                      <option value="">— keep original —</option>
+                      <option value="Pop">🎤 Pop</option>
+                      <option value="Acoustic">🎸 Acoustic</option>
+                      <option value="Folk">🪕 Folk</option>
+                      <option value="Piano Ballad">🎹 Piano Ballad</option>
+                      <option value="R&B / Soul">🎷 R&amp;B / Soul</option>
+                      <option value="Country">🤠 Country</option>
+                      <option value="Hip-Hop">🎧 Hip-Hop</option>
+                      <option value="Jazz">🎺 Jazz</option>
+                      <option value="Rock">🤘 Rock</option>
+                      <option value="Gospel">⛪ Gospel</option>
+                      <option value="Electronic">💿 Electronic</option>
+                      <option value="Classical">🎼 Classical</option>
+                    </select>
+                  </div>
+
+                  <div class="field">
+                    <label>New mood <span class="opt-tag">(optional)</span></label>
+                    <select name="newMood">
+                      <option value="">— keep original —</option>
+                      <option value="Romantic & Tender">🥰 Romantic &amp; Tender</option>
+                      <option value="Fun & Upbeat">😂 Fun &amp; Upbeat</option>
+                      <option value="Emotional & Moving">🥹 Emotional &amp; Moving</option>
+                      <option value="Empowering & Uplifting">💪 Empowering &amp; Uplifting</option>
+                      <option value="Peaceful & Nostalgic">🕊️ Peaceful &amp; Nostalgic</option>
+                      <option value="Celebratory & Energetic">🎉 Celebratory &amp; Energetic</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>Tell us more about the change you want</label>
+                  <textarea name="notes" placeholder="Be specific — e.g. 'Use a slower tempo', 'mention our daughter Lila in chorus', 'replace the line about hiking with one about cooking together', 'try a female singer instead'..." required minlength="10" maxlength="1000"></textarea>
+                </div>
+
                 <button type="submit" class="btn">Send revision request</button>
               </form>
             </div>
@@ -255,22 +341,39 @@
   async function submitRevision(e, email){
     e.preventDefault();
     const f = e.target;
-    const orderId = f.orderId.value;
-    const notes = f.notes.value.trim();
-    if (notes.length < 5) return toast('Please describe what you would like changed', 'error');
+    const orderId   = f.orderId.value;
+    const changeType= f.changeType.value;
+    const newGenre  = f.newGenre.value;
+    const newMood   = f.newMood.value;
+    const notes     = f.notes.value.trim();
+
+    if (notes.length < 10) return toast('Please describe the change in a bit more detail (10 characters min)', 'error');
+
+    // Build a structured customer_notes string the team and Claude can read
+    const parts = [];
+    parts.push(`[Type: ${changeType}]`);
+    if (newGenre) parts.push(`[New style: ${newGenre}]`);
+    if (newMood)  parts.push(`[New mood: ${newMood}]`);
+    parts.push(`\n${notes}`);
+    const combinedNotes = parts.join(' ');
+
     const btn = f.querySelector('button[type=submit]');
     btn.disabled = true; btn.textContent = 'Sending…';
     try {
       const r = await fetch(`/api/customer/orders/${orderId}/revisions`, {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ email, customer_notes: notes, change_type:'lyrics' })
+        body: JSON.stringify({
+          email,
+          customer_notes: combinedNotes,
+          change_type: changeType
+        })
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.message || data.error || 'failed');
-      toast('Revision request sent — we\'ll email you within 6h', 'success');
-      // refresh
-      $('#lookup-form').dispatchEvent(new Event('submit', { cancelable:true }));
+      toast("Revision request sent — we'll email you within 6h", 'success');
+      // refresh the listing so the new revision appears
+      performLookup(email);
     } catch (err) {
       toast(err.message, 'error');
     } finally {
