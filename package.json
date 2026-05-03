@@ -2,6 +2,7 @@
   "name": "lyralo-server",
   "version": "1.0.0",
   "description": "Lyralo automation: Shopify webhook → Claude lyrics → Suno song → admin dashboard",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
