@@ -103,6 +103,23 @@ CREATE TABLE IF NOT EXISTS activity_log (
 );
 CREATE INDEX IF NOT EXISTS idx_activity_order ON activity_log (order_id, created_at DESC);
 
+-- ----- LEADS (email capture avant checkout) -----
+-- Un lead = email entré au step 9 du quiz avant de voir les bundles.
+-- converted = TRUE quand une commande Shopify arrive avec ce même email.
+CREATE TABLE IF NOT EXISTS leads (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email       TEXT NOT NULL,
+  quiz        JSONB NOT NULL DEFAULT '{}',           -- réponses quiz au moment de la capture
+  source      TEXT NOT NULL DEFAULT 'quiz',          -- quiz | shopify_abandoned | manual
+  converted   BOOLEAN NOT NULL DEFAULT FALSE,
+  order_id    UUID REFERENCES orders(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_email   ON leads (LOWER(email));
+CREATE INDEX IF NOT EXISTS idx_leads_converted      ON leads (converted) WHERE converted = FALSE;
+CREATE INDEX IF NOT EXISTS idx_leads_created        ON leads (created_at DESC);
+
 -- ----- WEBHOOK LEDGER (idempotency) -----
 CREATE TABLE IF NOT EXISTS webhook_events (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),

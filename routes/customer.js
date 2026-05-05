@@ -4,6 +4,34 @@ import { query, logActivity } from '../lib/db.js';
 
 const router = Router();
 
+// ── EMAIL CAPTURE (quiz step avant checkout) ─────────────────────────────────
+// Déclenché dès que le client passe le step email → avant de voir les bundles.
+// Upsert : si même email revient on met à jour le quiz (+ récent).
+router.post('/email-capture', async (req, res) => {
+  try {
+    const { email, quiz = {}, source = 'quiz' } = req.body || {};
+    const clean = String(email || '').trim().toLowerCase();
+    if (!clean || !clean.includes('@')) {
+      return res.status(400).json({ error: 'email invalide' });
+    }
+
+    await query(
+      `INSERT INTO leads (email, quiz, source)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (LOWER(email))
+       DO UPDATE SET quiz = $2, source = $3, updated_at = now()
+       WHERE leads.converted = FALSE`,   // ne pas écraser si déjà converti
+      [clean, JSON.stringify(quiz), source]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[email-capture]', err.message);
+    // On swallow silently côté client — ne pas bloquer le quiz
+    res.status(500).json({ ok: false });
+  }
+});
+
 // Lookup orders by email (no PII besides their own)
 router.get('/orders', async (req, res) => {
   const email = String(req.query.email || '').trim().toLowerCase();

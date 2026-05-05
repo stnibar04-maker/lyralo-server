@@ -179,4 +179,25 @@ router.post('/poll', async (req, res) => {
   res.json(out);
 });
 
+// ============= LEADS (abandons quiz avant checkout) =============
+router.get('/leads', async (req, res) => {
+  const { converted = 'false', limit = 100 } = req.query;
+  const filterConverted = converted === 'all' ? null : converted === 'true';
+  const params = [];
+  const where = filterConverted !== null
+    ? [`converted = $${params.push(filterConverted)}`]
+    : [];
+  const sql = `
+    SELECT id, email, source, converted, order_id,
+           quiz->>'recipient' AS recipient, quiz->>'occasion' AS occasion,
+           quiz->>'genre' AS genre, quiz->>'voiceType' AS voice,
+           created_at, updated_at
+      FROM leads
+     ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+     ORDER BY created_at DESC
+     LIMIT ${Math.min(Number(limit), 500)}`;
+  const r = await query(sql, params);
+  res.json({ leads: r.rows });
+});
+
 export default router;

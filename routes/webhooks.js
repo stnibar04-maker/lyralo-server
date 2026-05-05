@@ -103,6 +103,13 @@ async function processNewOrder(order) {
   const orderId = inserted.rows[0].id;
   await logActivity(orderId, 'system', 'order.received', { shopify_id: order.id, bundle });
 
+  // Marquer le lead comme converti (si existant)
+  await query(
+    `UPDATE leads SET converted = TRUE, order_id = $1, updated_at = now()
+     WHERE LOWER(email) = LOWER($2) AND converted = FALSE`,
+    [orderId, email]
+  ).catch(() => {}); // silently ignore if leads table absent
+
   // Fire and forget receipt email (don't block pipeline)
   sendOrderReceived({
     to: email,
