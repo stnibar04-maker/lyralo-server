@@ -166,6 +166,7 @@
       <a href="#review" data-view="review">⏳ Awaiting review <span class="badge" id="b-review" hidden></span></a>
       <a href="#revisions" data-view="revisions">🔁 Revisions <span class="badge" id="b-revisions" hidden></span></a>
       <a href="#flight" data-view="flight">✈️ In flight <span class="badge" id="b-flight" hidden></span></a>
+      <a href="#leads" data-view="leads">📧 Leads <span class="badge" id="b-leads" hidden></span></a>
     </nav>
     <div class="me">
       <strong id="me-email">…</strong>
@@ -253,6 +254,7 @@
   let view = 'orders';
   let activeStatus = 'all';
   let searchQ = '';
+  let leadsFilter = 'false'; // 'false' = non convertis, 'true' = convertis, 'all' = tous
 
   /* =============== Init =============== */
   (async () => {
@@ -280,6 +282,8 @@
       setBadge($('#b-review'), s.pendingReview);
       setBadge($('#b-revisions'), s.pendingRevisions);
       setBadge($('#b-flight'), s.inFlight);
+      // Leads badge
+      if (s.leadsAbandoned > 0) setBadge($('#b-leads'), s.leadsAbandoned);
     } catch (e) { console.error(e); }
   }
 
@@ -375,6 +379,85 @@
       toast('Revision rejected', 'success');
       await refreshAll();
     } catch (e) { toast(e.message, 'error'); }
+  }
+
+  /* =============== Leads list =============== */
+  function showOrderFilters(){
+    $('#filter-bar').style.display = '';
+    const lf = $('#leads-filter-bar');
+    if (lf) lf.style.display = 'none';
+  }
+
+  async function loadLeads(){
+    const wrap = $('#list-wrap');
+    wrap.innerHTML = `<div class="empty">Loading…</div>`;
+    // Cacher la barre orders, afficher la barre leads
+    $('#filter-bar').style.display = 'none';
+    let lf = $('#leads-filter-bar');
+    if (!lf) {
+      lf = document.createElement('div');
+      lf.id = 'leads-filter-bar';
+      lf.className = 'filters';
+      lf.style.marginBottom = '14px';
+      $('#filter-bar').insertAdjacentElement('afterend', lf);
+    }
+    lf.style.display = '';
+    lf.innerHTML = `
+      <span style="font-size:.82rem;color:var(--muted);font-weight:600">Show:</span>
+      <button class="filter-chip ${leadsFilter==='false'?'active':''}" data-lf="false">🔴 Not converted</button>
+      <button class="filter-chip ${leadsFilter==='true'?'active':''}" data-lf="true">✅ Converted</button>
+      <button class="filter-chip ${leadsFilter==='all'?'active':''}" data-lf="all">All</button>
+    `;
+    $$('[data-lf]', lf).forEach(b => b.addEventListener('click', () => {
+      leadsFilter = b.dataset.lf;
+      loadLeads();
+    }));
+    try {
+      const { leads } = await api('/leads?converted=' + leadsFilter + '&limit=200');
+      // Update badge
+      const notConverted = leads.filter(l => !l.converted).length;
+      const badge = $('#b-leads');
+      if (notConverted > 0) { badge.textContent = notConverted; badge.hidden = false; }
+      else badge.hidden = true;
+
+      if (!leads.length) {
+        wrap.innerHTML = `<div class="empty"><div class="empty-emoji">📭</div>Aucun lead trouvé.</div>`;
+        return;
+      }
+      wrap.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>For</th>
+              <th>Occasion</th>
+              <th>Genre</th>
+              <th>Voice</th>
+              <th>Source</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${leads.map(l => `
+              <tr>
+                <td><strong>${escape(l.email)}</strong></td>
+                <td class="muted">${escape(l.recipient || '—')}</td>
+                <td class="muted">${escape(l.occasion || '—')}</td>
+                <td class="muted">${escape(l.genre || '—')}</td>
+                <td class="muted">${escape(l.voice || '—')}</td>
+                <td class="muted">${escape(l.source || '—')}</td>
+                <td>${l.converted
+                  ? '<span class="badge b-delivered">Converted ✓</span>'
+                  : '<span class="badge b-pending">Abandoned</span>'}</td>
+                <td class="muted">${fmtDate(l.created_at)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    } catch (e) {
+      wrap.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+    }
   }
 
   /* =============== Order drawer =============== */
@@ -590,10 +673,11 @@
     a.classList.add('active');
     view = a.dataset.view;
     $('#view-title').textContent = a.textContent.replace(/\d+/g,'').trim();
-    if (view === 'orders')    { activeStatus = 'all'; setActiveChip('all'); loadOrders(); }
-    if (view === 'review')    { activeStatus = 'awaiting_review'; setActiveChip('awaiting_review'); loadOrders(); }
-    if (view === 'flight')    { activeStatus = 'song_generating'; setActiveChip('song_generating'); loadOrders(); }
-    if (view === 'revisions') { loadRevisions(); }
+    if (view === 'orders')    { activeStatus = 'all'; setActiveChip('all'); showOrderFilters(); loadOrders(); }
+    if (view === 'review')    { activeStatus = 'awaiting_review'; setActiveChip('awaiting_review'); showOrderFilters(); loadOrders(); }
+    if (view === 'flight')    { activeStatus = 'song_generating'; setActiveChip('song_generating'); showOrderFilters(); loadOrders(); }
+    if (view === 'revisions') { showOrderFilters(); loadRevisions(); }
+    if (view === 'leads')     { leadsFilter = 'false'; loadLeads(); }
   }));
   function setActiveChip(s){ $$('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.status === s)); }
 
@@ -613,6 +697,7 @@
   async function refreshAll(){
     await loadStats();
     if (view === 'revisions') await loadRevisions();
+    else if (view === 'leads') await loadLeads();
     else await loadOrders();
   }
 </script>

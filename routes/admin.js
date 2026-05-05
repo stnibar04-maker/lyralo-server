@@ -33,13 +33,15 @@ router.get('/stats', async (req, res) => {
   const pendingReview = await query(`SELECT COUNT(*)::int AS c FROM orders WHERE status='awaiting_review'`);
   const pendingRevisions = await query(`SELECT COUNT(*)::int AS c FROM revisions WHERE status='pending'`);
   const inFlight = await query(`SELECT COUNT(*)::int AS c FROM orders WHERE status IN ('lyrics_pending','lyrics_ready','song_generating')`);
+  const leads = await query(`SELECT COUNT(*)::int AS c FROM leads WHERE converted = FALSE`).catch(() => ({ rows: [{ c: 0 }] }));
   res.json({
     orders24h: today.rows[0].c,
     orders7d: week.rows[0].c,
     revenue30d_cents: Number(revenue.rows[0].r),
     pendingReview: pendingReview.rows[0].c,
     pendingRevisions: pendingRevisions.rows[0].c,
-    inFlight: inFlight.rows[0].c
+    inFlight: inFlight.rows[0].c,
+    leadsAbandoned: leads.rows[0].c
   });
 });
 
