@@ -14,6 +14,15 @@ import { requireAdmin } from './lib/auth.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+// ── CORS — public customer API doit être accessible depuis Shopify/lyralo.com ─
+app.use('/api/customer', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 // Webhook routes need raw body — mount BEFORE express.json()
 app.use('/webhooks', webhookRoutes);
 
