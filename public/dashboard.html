@@ -433,9 +433,9 @@
               <th>Occasion</th>
               <th>Genre</th>
               <th>Voice</th>
-              <th>Source</th>
               <th>Status</th>
               <th>Date</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -446,15 +446,37 @@
                 <td class="muted">${escape(l.occasion || '—')}</td>
                 <td class="muted">${escape(l.genre || '—')}</td>
                 <td class="muted">${escape(l.voice || '—')}</td>
-                <td class="muted">${escape(l.source || '—')}</td>
                 <td>${l.converted
                   ? '<span class="badge b-delivered">Converted ✓</span>'
                   : '<span class="badge b-pending">Abandoned</span>'}</td>
                 <td class="muted">${fmtDate(l.created_at)}</td>
+                <td>${!l.converted
+                  ? `<button class="btn btn-primary" style="font-size:.75rem;padding:6px 12px" data-recover="${l.id}" data-email="${escape(l.email)}">📧 Relancer</button>`
+                  : ''}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>`;
+      // Bouton relancer
+      $$('[data-recover]', wrap).forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const id    = btn.dataset.recover;
+          const email = btn.dataset.email;
+          if (!confirm(`Envoyer un email de relance à ${email} ?`)) return;
+          btn.disabled = true;
+          btn.textContent = '⏳ Envoi…';
+          try {
+            await api(`/leads/${id}/recover`, { method: 'POST', body: '{}' });
+            toast(`Email envoyé à ${email}`, 'success');
+            btn.textContent = '✓ Envoyé';
+          } catch (err) {
+            toast(err.message, 'error');
+            btn.disabled = false;
+            btn.textContent = '📧 Relancer';
+          }
+        });
+      });
     } catch (e) {
       wrap.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
     }

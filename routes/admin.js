@@ -4,7 +4,7 @@ import { login, signToken, setAuthCookie, clearAuthCookie, requireAdmin } from '
 import {
   runLyricsStage, runSongStage, approveAndDeliver, applyRevision, pollPendingSongs
 } from '../lib/orchestrator.js';
-import { sendRevisionUpdate } from '../lib/email.js';
+import { sendRevisionUpdate, sendLeadRecovery } from '../lib/email.js';
 
 const router = Router();
 
@@ -182,6 +182,27 @@ router.post('/poll', async (req, res) => {
 });
 
 // ============= LEADS (abandons quiz avant checkout) =============
+
+// Envoyer un email de relance à un lead non converti
+router.post('/leads/:id/recover', async (req, res) => {
+  const { rows: [lead] } = await query(`SELECT * FROM leads WHERE id = $1`, [req.params.id]);
+  if (!lead) return res.status(404).json({ error: 'lead not found' });
+  if (lead.converted) return res.status(400).json({ error: 'already converted' });
+
+  try {
+    await sendLeadRecovery({ to: lead.email, quiz: lead.quiz || {} });
+    // Log la relance dans le lead
+    await query(
+      `UPDATE leads SET updated_at = now() WHERE id = $1`,
+      [req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[lead recovery]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.get('/leads', async (req, res) => {
   const { converted = 'false', limit = 100 } = req.query;
   const filterConverted = converted === 'all' ? null : converted === 'true';
