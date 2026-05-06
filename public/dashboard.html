@@ -432,7 +432,7 @@
               <th>For</th>
               <th>Occasion</th>
               <th>Genre</th>
-              <th>Voice</th>
+              <th>Relances</th>
               <th>Status</th>
               <th>Date</th>
               <th></th>
@@ -445,12 +445,17 @@
                 <td class="muted">${escape(l.recipient || '—')}</td>
                 <td class="muted">${escape(l.occasion || '—')}</td>
                 <td class="muted">${escape(l.genre || '—')}</td>
-                <td class="muted">${escape(l.voice || '—')}</td>
+                <td class="muted num" style="text-align:center">
+                  ${'📧'.repeat(l.recovery_count || 0) || '—'}
+                  <small style="display:block;color:var(--muted)">${l.recovery_count || 0}/3</small>
+                </td>
                 <td>${l.converted
-                  ? '<span class="badge b-delivered">Converted ✓</span>'
-                  : '<span class="badge b-pending">Abandoned</span>'}</td>
+                  ? `<span class="badge b-delivered">Converted ✓</span>${l.order_id ? `<br><small class="muted" style="font-size:.72rem">→ order</small>` : ''}`
+                  : l.recovery_count >= 3
+                    ? '<span class="badge b-refunded">No response</span>'
+                    : '<span class="badge b-pending">Abandoned</span>'}</td>
                 <td class="muted">${fmtDate(l.created_at)}</td>
-                <td>${!l.converted
+                <td>${!l.converted && l.recovery_count < 3
                   ? `<button class="btn btn-primary" style="font-size:.75rem;padding:6px 12px" data-recover="${l.id}" data-email="${escape(l.email)}">📧 Relancer</button>`
                   : ''}</td>
               </tr>

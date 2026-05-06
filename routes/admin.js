@@ -190,13 +190,17 @@ router.post('/leads/:id/recover', async (req, res) => {
   if (lead.converted) return res.status(400).json({ error: 'already converted' });
 
   try {
-    await sendLeadRecovery({ to: lead.email, quiz: lead.quiz || {} });
-    // Log la relance dans le lead
+    const attempt = (lead.recovery_count || 0) + 1;
+    await sendLeadRecovery({ to: lead.email, quiz: lead.quiz || {}, attempt: Math.min(attempt, 3) });
     await query(
-      `UPDATE leads SET updated_at = now() WHERE id = $1`,
+      `UPDATE leads
+       SET recovery_count = recovery_count + 1,
+           last_recovery_at = now(),
+           updated_at = now()
+       WHERE id = $1`,
       [req.params.id]
     );
-    res.json({ ok: true });
+    res.json({ ok: true, attempt });
   } catch (e) {
     console.error('[lead recovery]', e.message);
     res.status(500).json({ error: e.message });
@@ -212,6 +216,7 @@ router.get('/leads', async (req, res) => {
     : [];
   const sql = `
     SELECT id, email, source, converted, order_id,
+           recovery_count, last_recovery_at,
            quiz->>'recipient' AS recipient, quiz->>'occasion' AS occasion,
            quiz->>'genre' AS genre, quiz->>'voiceType' AS voice,
            created_at, updated_at
